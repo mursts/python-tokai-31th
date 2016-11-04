@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AWSでサーバレスなアプリを作った話</title>
+    <meta charset='utf-8'>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/translations.js"></script>
+  </head>
+  <body style='display: none'>
+    
+  <div class="section" id="aws">
+<h1>AWSでサーバレスなアプリを作った話<a class="headerlink" href="#aws" title="このヘッドラインへのパーマリンク">¶</a></h1>
+<div class="line-block">
+<div class="line">2016.10.29 Python東海 31th</div>
+<div class="line">&#64;mursts</div>
+</div>
+<div class="section" id="id1">
+<h2>お前だれよ<a class="headerlink" href="#id1" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li>みうらさとし(&#64;mursts)</li>
+<li>Python東海の管理人の1人です</li>
+<li>GCPUG Nagoyaもやっています。</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>余談ですが<a class="headerlink" href="#id2" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p>前回はSphinxの話をしたのにスライドをDecksetで作成したので、今回はSphinxで作成しました</p>
+</div>
+<div class="section" id="id3">
+<h2>私は普段AWSを触っていないので、間違えていたら教えてください。<a class="headerlink" href="#id3" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id4">
+<h2>サーバレス 最近良く聞くようになりました。<a class="headerlink" href="#id4" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="paas">
+<h2>サーバレスってPaaSと違うの？<a class="headerlink" href="#paas" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id5">
+<h2>サーバレス難しい。。。<a class="headerlink" href="#id5" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id6">
+<h2>さーばれす。。<a class="headerlink" href="#id6" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li>自分でサーバ用意しなければサーバレス？</li>
+<li>それだったらGAE、Herokuもサーバレス？</li>
+<li>詳しい話はこれを見るといいかも</li>
+<li><a class="reference external" href="https://speakerdeck.com/naoya/serverless-architecture">Serverless Architecture by Naoya Ito</a></li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h2>こまけえことはいいんだよ<a class="headerlink" href="#id7" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id8">
+<h2>とりあえずやってみる<a class="headerlink" href="#id8" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id9">
+<h2>サーバレスの流れにのる<a class="headerlink" href="#id9" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id10">
+<h2>作ったもの<a class="headerlink" href="#id10" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li>お昼の友<ul>
+<li>LINEで位置情報を送ると近場のランチのお店をピックアップしてくれます</li>
+</ul>
+</li>
+</ul>
+<a class="reference internal image-reference" href="_images/syokuji_blank_woman.png"><img alt="_images/syokuji_blank_woman.png" src="_images/syokuji_blank_woman.png" style="width: 350.5px; height: 400.0px;" /></a>
+</div>
+<div class="section" id="id11">
+<h2>使ったもの<a class="headerlink" href="#id11" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="https://aws.amazon.com/jp/api-gateway/">Amazon API Gateway</a><ul>
+<li>LINEからのリクエストを受ける</li>
+</ul>
+</li>
+<li><a class="reference external" href="https://aws.amazon.com/jp/lambda/">AWS Lambda</a><ul>
+<li>API Gatewayで受けたリクエストを処理する <a class="footnote-reference" href="#f1" id="id12">[1]</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="https://github.com/awslabs/chalice">chalice</a><ul>
+<li>LambdaとAPI Gatewayを扱うのが容易になる <code class="docutils literal"><span class="pre">Python</span></code> <a class="footnote-reference" href="#f2" id="id13">[2]</a> のフレームワーク</li>
+<li>デプロイもコマンド一発でこれがないとしんどそう</li>
+</ul>
+</li>
+<li><a class="reference external" href="https://business.line.me/ja/services/bot">LINE Messaging API</a></li>
+<li><a class="reference external" href="http://webservice.recruit.co.jp/hotpepper/">ホットペッパーAPI</a></li>
+</ul>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="f1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[1]</a></td><td>Python 2.7、Node.js、Java 8 が使える</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id13">[2]</a></td><td>ようやくPython登場</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="id14">
+<h2>デモ<a class="headerlink" href="#id14" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="id15">
+<h2>やったこと<a class="headerlink" href="#id15" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<div class="highlight-sh"><div class="highlight"><pre><span></span>$ virtualenv ~/.virtualenv/chalice -p python2 <span class="c1"># python 2.7</span>
+$ <span class="nb">source</span> ~/.virtualenv/chalice/bin/activate
+
+$ pip install chalice
+
+$ chalice new-project project_name <span class="o">&amp;&amp;</span> <span class="nb">cd</span> project_name
+
+$ chalice deploy
+
+ここでエラー発生 <span class="c1"># IAM consoleでユーザ作ってアクセスキーを取得した</span>
+
+$ pip install awscli
+$ aws configure <span class="c1"># AWSにアクセスするために取得したキーを設定</span>
+
+$ chalice deploy
+
+またエラー
+
+<span class="c1"># IAMでポリシーの設定</span>
+AWSLambdaFullAccess、IAMFullAccess、AmazonAPIGatewayInvokeFullAccess、AmazonAPIGatewayAdministrator
+を設定した
+
+$ chalice deploy <span class="c1"># ようやく成功</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id16">
+<h2>まとめ<a class="headerlink" href="#id16" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<ul class="simple">
+<li>とりあえずサーバレスの波の端っこに乗れたのかなと思います。</li>
+<li>これと同じものはGAEでもHerokuでも作れます<ul>
+<li>好きなものを使いましょう</li>
+</ul>
+</li>
+<li>私はGAEが好きです</li>
+</ul>
+</div>
+<div class="section" id="id17">
+<h2>宣伝1<a class="headerlink" href="#id17" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="python-boot-camp">
+<h2>Python Boot Camp<a class="headerlink" href="#python-boot-camp" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p><a class="reference external" href="https://www.pycon.jp/support/bootcamp.html">https://www.pycon.jp/support/bootcamp.html</a></p>
+<ul class="simple">
+<li>初心者向けPythonチュートリアル</li>
+<li>名古屋でもやりたいという方は声をかけてください</li>
+</ul>
+</div>
+<div class="section" id="id18">
+<h2>宣伝2<a class="headerlink" href="#id18" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+<div class="section" id="gcpug-nagoya">
+<h2>GCPUG Nagoya<a class="headerlink" href="#gcpug-nagoya" title="このヘッドラインへのパーマリンク">¶</a></h2>
+<p><a class="reference external" href="http://gcpug-nagoya.connpass.com/">http://gcpug-nagoya.connpass.com/</a></p>
+<p>第2回勉強会は満席ですが、やってみたいというのがあれば声をかけてください。</p>
+</div>
+<div class="section" id="id19">
+<h2>以上、ありがとうございました。<a class="headerlink" href="#id19" title="このヘッドラインへのパーマリンク">¶</a></h2>
+</div>
+</div>
+
+
+  <div id="help">
+      Use the left and right arrow keys or click the left and right
+      edges of the page to navigate between slides.<br>
+      (Press 'H' or navigate to hide this message.)
+  </div>
+  </body>
+  <script type="text/javascript" src="_static/js/initialize.js"></script>
+  <script type="text/javascript" src="_static/js/slides.js"></script>
+</html>
